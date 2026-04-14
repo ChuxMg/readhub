@@ -33,6 +33,16 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
 
+### Configuration
+
+This project now supports a **Prisma database** and **AI Chat** via OpenAI. Before running or deploying, ensure you have the following environment variables set:
+
+1.  **OpenAI API Key**: Required for the chat feature.
+    - Add `OPENAI_API_KEY=your_key_here` to your `.env` file.
+2.  **Database URL**:
+    - Locally, it defaults to a SQLite database (`file:./dev.db`).
+    - For production (Vercel), you may want to connect a PostgreSQL or similar database. Update the `datasource` in `prisma/schema.prisma` if needed.
+
 ### Steps to Deploy:
 
 1. **Push to GitHub**:
