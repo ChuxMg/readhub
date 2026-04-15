@@ -3,12 +3,13 @@ import OpenAI from "openai";
 import { prisma } from "@/src/lib/prisma";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "dummy_key_for_build",
+  apiKey: process.env.GROQ_API_KEY || "dummy_key_for_build",
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 export async function POST(request: Request) {
-  if (!process.env.OPENAI_API_KEY) {
-    return NextResponse.json({ error: "OpenAI API Key not configured" }, { status: 500 });
+  if (!process.env.GROQ_API_KEY) {
+    return NextResponse.json({ error: "GROQ API Key not configured" }, { status: 500 });
   }
 
   try {
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "llama-3.1-8b-instant",
       messages: [
         {
           role: "system",
