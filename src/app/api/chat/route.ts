@@ -19,14 +19,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    // Force Mock Mode if requested or if key is dummy
+    // Check if we have extracted text. If not, we might need to extract it now if it was an old upload.
+    let contextText = book.extractedText || "";
+
+    // If no text was found in DB, we could theoretically extract it here if we have the PDF base64,
+    // but for now we'll just inform the user if it's empty.
+
     const isMockMode = !process.env.OPENAI_API_KEY ||
                        process.env.OPENAI_API_KEY === "dummy_key" ||
                        process.env.AI_MOCK_MODE === "true";
 
     if (isMockMode) {
       return NextResponse.json({
-        reply: `[MOCK MODE] I'm simulating a response about "${book.title}". In a real scenario with a valid API key, I would analyze the book content and answer your question: "${message}"`
+        reply: `[MOCK MODE] I'm simulating a response about "${book.title}". \n\nContent Preview: ${contextText ? contextText.substring(0, 100) + "..." : "No content extracted yet."}\n\nYour question: "${message}"`
       });
     }
 
@@ -36,10 +41,20 @@ export async function POST(request: Request) {
         messages: [
           {
             role: "system",
-            content: `You are a helpful assistant that helps readers understand the book: "${book.title}" by ${book.author}.
-            Here is some content from the book to help you answer:
+            content: `You are a highly capable AI assistant helping a reader understand a specific book.
 
-            ${book.extractedText?.substring(0, 10000) || "No content available."}`,
+BOOK TITLE: ${book.title}
+AUTHOR: ${book.author}
+
+ACTUAL BOOK CONTENT (EXCERPT):
+---
+${contextText.substring(0, 12000) || "Warning: No text content was extracted from this PDF. Please answer based on the title/author if possible, but inform the user."}
+---
+
+INSTRUCTIONS:
+- Answer the user's question using the provided BOOK CONTENT.
+- If the answer isn't in the provided content, use your general knowledge about the book but prioritize the excerpt.
+- Be concise and helpful.`,
           },
           { role: "user", content: message },
         ],
@@ -47,14 +62,13 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ reply: response.choices[0].message.content });
     } catch (apiError: any) {
-      // Robust check for Quota Exceeded or Billing issues
       const isQuotaError = apiError.status === 429 ||
                            apiError.code === 'insufficient_quota' ||
                            (apiError.error && apiError.error.code === 'insufficient_quota');
 
       if (isQuotaError) {
         return NextResponse.json({
-          reply: "⚠️ Quota Exceeded: Your OpenAI account has run out of credits or reached its limit. \n\nRecommendation: \n1. Check your billing at platform.openai.com \n2. Switch to a free provider like Groq (see README for steps)."
+          reply: "⚠️ Quota Exceeded: Your AI provider account has run out of credits. Please check your billing or switch to a free provider like Groq."
         });
       }
       throw apiError;
