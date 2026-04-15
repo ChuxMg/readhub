@@ -4,16 +4,10 @@ import { prisma } from "@/src/lib/prisma";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "dummy_key",
-  // Allow switching to Groq or other OpenAI-compatible providers via env
   baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
 });
 
 export async function POST(request: Request) {
-  // If no API key and no mock mode, return error
-  if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV === "production") {
-    return NextResponse.json({ error: "AI API Key not configured" }, { status: 500 });
-  }
-
   try {
     const { message, bookId } = await request.json();
 
@@ -25,10 +19,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    // Mock response for development if API key is missing or dummy
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === "dummy_key") {
+    // Force Mock Mode if requested or if key is dummy
+    const isMockMode = !process.env.OPENAI_API_KEY ||
+                       process.env.OPENAI_API_KEY === "dummy_key" ||
+                       process.env.AI_MOCK_MODE === "true";
+
+    if (isMockMode) {
       return NextResponse.json({
-        reply: `[MOCK MODE] Since no API key is set, I'm simulating a response about "${book.title}". Your question was: "${message}"`
+        reply: `[MOCK MODE] I'm simulating a response about "${book.title}". In a real scenario with a valid API key, I would analyze the book content and answer your question: "${message}"`
       });
     }
 
@@ -49,17 +47,23 @@ export async function POST(request: Request) {
 
       return NextResponse.json({ reply: response.choices[0].message.content });
     } catch (apiError: any) {
-      // Handle Quota Exceeded (429)
-      if (apiError.status === 429) {
-        console.warn("OpenAI Quota Exceeded. Falling back to helpful error message.");
+      // Robust check for Quota Exceeded or Billing issues
+      const isQuotaError = apiError.status === 429 ||
+                           apiError.code === 'insufficient_quota' ||
+                           (apiError.error && apiError.error.code === 'insufficient_quota');
+
+      if (isQuotaError) {
         return NextResponse.json({
-          reply: "I'm sorry, the AI service is currently at its limit (Quota Exceeded). Please check your OpenAI billing or consider using a free alternative like Groq."
+          reply: "⚠️ Quota Exceeded: Your OpenAI account has run out of credits or reached its limit. \n\nRecommendation: \n1. Check your billing at platform.openai.com \n2. Switch to a free provider like Groq (see README for steps)."
         });
       }
       throw apiError;
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat error:", error);
-    return NextResponse.json({ error: "Failed to get AI response" }, { status: 500 });
+    return NextResponse.json({
+      error: "Failed to get AI response",
+      details: error.message
+    }, { status: 500 });
   }
 }
