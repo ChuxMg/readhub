@@ -37,8 +37,16 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 This project now supports a **Prisma database** and **AI Chat** via OpenAI. Before running or deploying, ensure you have the following environment variables set:
 
-1.  **OpenAI API Key**: Required for the chat feature.
-    - Add `OPENAI_API_KEY=your_key_here` to your `.env` file.
+1.  **AI API Key**: Required for the chat feature.
+    - **OpenAI (Paid)**: Add `OPENAI_API_KEY=your_openai_key`.
+    - **Groq (Free Alternative)**:
+        1. Get a free key at [console.groq.com](https://console.groq.com/).
+        2. Add these to your `.env`:
+           ```bash
+           OPENAI_API_KEY=your_groq_key
+           AI_BASE_URL="https://api.groq.com/openai/v1"
+           AI_MODEL="llama-3.3-70b-versatile"
+           ```
 2.  **Database URL**:
     - Locally, it defaults to a SQLite database (`file:./dev.db`).
     - For production (Vercel), you may want to connect a PostgreSQL or similar database. Update the `datasource` in `prisma/schema.prisma` if needed.
