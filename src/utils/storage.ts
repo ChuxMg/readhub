@@ -20,21 +20,17 @@ export const storage = {
   },
 
   saveBook: async (bookData: Partial<Book>): Promise<void> => {
-    try {
-      const res = await fetch("/api/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bookData),
-      });
-      if (!res.ok) throw new Error("Failed to save");
-    } catch (error) {
-      console.error(error);
-    }
+    await fetch("/api/books", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bookData),
+    });
   },
 
   deleteBook: async (id: string): Promise<void> => {
-    // Note: Delete API route not implemented yet in this demo but would follow similar pattern
-    console.warn("Delete not implemented via API yet");
+    await fetch(`/api/books/${id}`, {
+      method: "DELETE",
+    });
   },
 
   fileToBase64: (file: File): Promise<string> => {
@@ -60,5 +56,5 @@ export const storage = {
       console.error(error);
       return "Sorry, I couldn't connect to the AI.";
     }
-  }
+  },
 };

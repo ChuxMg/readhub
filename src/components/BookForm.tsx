@@ -2,7 +2,13 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Upload } from "lucide-react";
 import { storage, Book } from "../utils/storage";
 
@@ -24,24 +30,26 @@ export function BookForm({ editingBook, onSave, onCancel }: BookFormProps) {
 
     setIsUploading(true);
     try {
-      let pdfBase64 = editingBook?.pdfBase64 || "";
-      
+      let base64Result: string | undefined = undefined;
+
+      // Only convert to base64 if a new file was selected
       if (pdfFile) {
-        pdfBase64 = await storage.fileToBase64(pdfFile);
+        base64Result = await storage.fileToBase64(pdfFile);
       } else if (!editingBook) {
+        // If not editing and no file, we can't create a book
         setIsUploading(false);
         return;
       }
 
-      const book: Book = {
-        id: editingBook?.id || crypto.randomUUID(),
+      const bookData: Partial<Book> = {
+        id: editingBook?.id,
         title: title.trim(),
         author: author.trim(),
-        pdfBase64,
-        uploadedAt: editingBook?.uploadedAt || new Date().toISOString(),
+        // Only include pdfBase64 if we actually have a new one
+        pdfBase64: base64Result,
       };
 
-      storage.saveBook(book);
+      await storage.saveBook(bookData);
       onSave();
     } catch (error) {
       console.error("Error saving book:", error);
@@ -57,13 +65,20 @@ export function BookForm({ editingBook, onSave, onCancel }: BookFormProps) {
           {editingBook ? "Edit Book" : "Add New Book"}
         </CardTitle>
         <CardDescription className="text-slate-500">
-          {editingBook ? "Update book details or replace PDF" : "Upload a new PDF to the library"}
+          {editingBook
+            ? "Update book details or replace PDF"
+            : "Upload a new PDF to the library"}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium text-slate-700">Title</Label>
+            <Label
+              htmlFor="title"
+              className="text-sm font-medium text-slate-700"
+            >
+              Title
+            </Label>
             <Input
               id="title"
               placeholder="Enter book title"
@@ -75,7 +90,12 @@ export function BookForm({ editingBook, onSave, onCancel }: BookFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="author" className="text-sm font-medium text-slate-700">Author</Label>
+            <Label
+              htmlFor="author"
+              className="text-sm font-medium text-slate-700"
+            >
+              Author
+            </Label>
             <Input
               id="author"
               placeholder="Enter author name"
@@ -87,7 +107,9 @@ export function BookForm({ editingBook, onSave, onCancel }: BookFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="pdf" className="text-sm font-medium text-slate-700">PDF File</Label>
+            <Label htmlFor="pdf" className="text-sm font-medium text-slate-700">
+              PDF File
+            </Label>
             <div className="relative">
               <Input
                 id="pdf"
@@ -99,15 +121,26 @@ export function BookForm({ editingBook, onSave, onCancel }: BookFormProps) {
               <Upload className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             </div>
             {editingBook && !pdfFile && (
-              <p className="text-xs text-slate-500">Leave empty to keep existing PDF</p>
+              <p className="text-xs text-slate-500">
+                Leave empty to keep existing PDF
+              </p>
             )}
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="flex-1"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isUploading} className="flex-1 bg-blue-600 hover:bg-blue-700">
+            <Button
+              type="submit"
+              disabled={isUploading}
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+            >
               {isUploading ? "Saving..." : editingBook ? "Update" : "Add Book"}
             </Button>
           </div>
