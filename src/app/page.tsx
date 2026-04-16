@@ -47,11 +47,17 @@ export default function Page() {
     setShowForm(false);
   };
 
-  const handleSaveBook = () => {
-    setBooks(storage.getBooks());
-    setShowForm(false);
-    setEditingBook(null);
-    setView("library");
+  const handleSaveBook = async () => {
+    try {
+      const updatedBooks = await storage.getBooks();
+      setBooks(updatedBooks);
+
+      setShowForm(false);
+      setEditingBook(null);
+      setView("library");
+    } catch (error) {
+      console.error("Failed to refresh books:", error);
+    }
   };
 
   const handleEditBook = (book: Book) => {
@@ -89,28 +95,31 @@ export default function Page() {
   }
 
   if (view === "read" && selectedBook) {
-    return (
-      <PDFViewer 
-        book={selectedBook} 
-        onBack={() => setView("library")} 
-      />
-    );
+    return <PDFViewer book={selectedBook} onBack={() => setView("library")} />;
   }
 
   return (
     <div className="min-h-screen bg-slate-50">
       <Header userEmail={user.email} role={user.role} onLogout={handleLogout} />
-      
+
       <main className="mx-auto max-w-6xl px-4 py-8">
         {user.role === "admin" ? (
           <div className="space-y-8">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-semibold text-slate-900">Book Management</h2>
+                <h2 className="text-2xl font-semibold text-slate-900">
+                  Book Management
+                </h2>
                 <p className="text-slate-600">Upload and manage your library</p>
               </div>
               {!showForm && (
-                <Button onClick={() => { setShowForm(true); setView("add-book"); }} className="gap-2 bg-blue-600 hover:bg-blue-700">
+                <Button
+                  onClick={() => {
+                    setShowForm(true);
+                    setView("add-book");
+                  }}
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                >
                   <Plus className="h-4 w-4" />
                   Add New Book
                 </Button>
@@ -151,7 +160,9 @@ export default function Page() {
                 <BookOpen className="h-6 w-6 text-emerald-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-semibold text-slate-900">Your Library</h2>
+                <h2 className="text-2xl font-semibold text-slate-900">
+                  Your Library
+                </h2>
                 <p className="text-slate-600">Select a book to start reading</p>
               </div>
             </div>
