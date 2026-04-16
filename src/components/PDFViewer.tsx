@@ -81,6 +81,7 @@ export function PDFViewer({ book, onBack }: PDFViewerProps) {
       <ChatSidebar
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
+        bookId={book.id}
         bookTitle={book.title}
         bookAuthor={book.author}
       />

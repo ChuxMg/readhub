@@ -4,17 +4,18 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Send, Bot, User, X } from "lucide-react";
-import { simulateAIResponse, Message } from "../utils/aiMock";
+import { storage, Message } from "../utils/storage";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ChatSidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  bookId: string;
   bookTitle: string;
   bookAuthor: string;
 }
 
-export function ChatSidebar({ isOpen, onClose, bookTitle, bookAuthor }: ChatSidebarProps) {
+export function ChatSidebar({ isOpen, onClose, bookId, bookTitle, bookAuthor }: ChatSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -42,7 +43,7 @@ export function ChatSidebar({ isOpen, onClose, bookTitle, bookAuthor }: ChatSide
     setIsLoading(true);
 
     try {
-      const aiResponse = await simulateAIResponse(input, bookTitle, bookAuthor);
+      const aiResponse = await storage.chatWithBook(bookId, input);
       setMessages((prev) => [...prev, { role: "assistant", content: aiResponse }]);
     } catch (error) {
       setMessages((prev) => [...prev, { role: "assistant", content: "Sorry, I encountered an error processing your request." }]);
