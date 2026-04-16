@@ -7,33 +7,8 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 
 // Initialize OpenAI client (configured for Groq)
 const openai = new OpenAI({
-  apiKey: process.env.GROQ_API_KEY || "dummy_key",
-  baseURL: process.env.AI_BASE_URL || "https://api.groq.com/openai/v1",
+  apiKey: process.env.OPENAI_API_KEY || "dummy_key_for_build",
 });
-
-async function extractTextOnTheFly(pdfBase64: string): Promise<string> {
-  try {
-    if (!pdfBase64) return "";
-    const dataBuffer = Buffer.from(pdfBase64.split(",")[1], "base64");
-    const loadingTask = pdfjs.getDocument({
-      data: new Uint8Array(dataBuffer),
-      useWorkerFetch: false,
-      isEvalSupported: false,
-    });
-    const pdf = await loadingTask.promise;
-    let fullText = "";
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const textContent = await page.getTextContent();
-      fullText +=
-        textContent.items.map((item: any) => item.str).join(" ") + "\n";
-    }
-    return fullText.trim();
-  } catch (error) {
-    console.error("[AI] On-the-fly repair failed:", error);
-    return "";
-  }
-}
 
 export async function POST(request: Request) {
   try {
@@ -44,35 +19,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Book not found" }, { status: 404 });
     }
 
-    // AUTO-REPAIR: If text is missing from DB, extract it now
-    let contextText = book.extractedText || "";
-    if (!contextText && book.pdfBase64) {
-      console.log(`[AI] Repairing missing text for "${book.title}"...`);
-      contextText = await extractTextOnTheFly(book.pdfBase64);
-      if (contextText) {
-        await prisma.book.update({
-          where: { id: bookId },
-          data: { extractedText: contextText },
-        });
-        console.log(
-          `[AI] Successfully repaired and saved text for "${book.title}".`,
-        );
-      }
-    }
-
     const response = await openai.chat.completions.create({
       model: process.env.AI_MODEL || "llama-3.1-8b-instant",
       messages: [
         {
           role: "system",
-          content: `You are a helpful AI assistant helping a reader understand this book.
-          BOOK TITLE: ${book.title}
-          AUTHOR: ${book.author}
-          ACTUAL CONTENT: ${contextText.substring(0, 15000) || "Warning: No text content available."}
-          
-          INSTRUCTIONS:
-          - Answer using the provided CONTENT.
-          - Be concise and accurate.`,
+          content: `You are a helpful assistant that helps readers understand the book: "${book.title}" by ${book.author}.
+          Here is some content from the book to help you answer:
+
+          ${book.extractedText?.substring(0, 10000) || "No content available."}`,
         },
         { role: "user", content: message },
       ],

@@ -31,40 +31,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 ## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme).
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-### Configuration
-
-This project now supports a **Prisma database** and **AI Chat** via OpenAI. Before running or deploying, ensure you have the following environment variables set:
-
-1.  **OpenAI API Key**: Required for the chat feature.
-    - Add `OPENAI_API_KEY=your_key_here` to your `.env` file.
-2.  **Database URL**:
-    - Locally, it defaults to a SQLite database (`file:./dev.db`).
-    - For production (Vercel), you may want to connect a PostgreSQL or similar database. Update the `datasource` in `prisma/schema.prisma` if needed.
-
-### Steps to Deploy:
-
-1. **Push to GitHub**:
-   - Create a new repository on GitHub.
-   - Push your local code to that repository:
-     ```bash
-     git remote add origin <your-repo-url>
-     git branch -M main
-     git push -u origin main
-     ```
-
-2. **Import to Vercel**:
-   - Go to [vercel.com/new](https://vercel.com/new).
-   - Connect your GitHub account and import the repository.
-   - Vercel will automatically detect that this is a Next.js project.
-
-3. **Configure Settings**:
-   - The default settings (Build Command: `next build`, Output Directory: `.next`) are already correct for this project.
-   - Click **Deploy**.
-
-4. **Alternative: Deploy via Vercel CLI**:
-   - Install Vercel CLI: `npm i -g vercel`
-   - Run `vercel` in the project root and follow the prompts.
-
-Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

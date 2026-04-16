@@ -5,6 +5,8 @@ import * as pdfjs from "pdfjs-dist/build/pdf.mjs";
 // Ensure PDF engine works in Node.js
 import "pdfjs-dist/build/pdf.worker.mjs";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const books = await prisma.book.findMany({
@@ -12,11 +14,7 @@ export async function GET() {
     });
     return NextResponse.json(books);
   } catch (error) {
-    console.error("Fetch error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch books" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch books" }, { status: 500 });
   }
 }
 
@@ -34,8 +32,7 @@ async function extractTextFromPDF(pdfBase64: string): Promise<string> {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      fullText +=
-        textContent.items.map((item: any) => item.str).join(" ") + "\n";
+      fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n";
     }
     return fullText.trim();
   } catch (error) {

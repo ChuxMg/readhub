@@ -24,7 +24,7 @@ export default function Page() {
   useEffect(() => {
     const fetchBooks = async () => {
       if (user) {
-        const data = await storage.getBooks();
+        const data = await storage.getBooks(); // Added await here
         setBooks(data);
       }
     };
@@ -47,9 +47,8 @@ export default function Page() {
     setShowForm(false);
   };
 
-  const handleSaveBook = async () => {
-    const data = await storage.getBooks();
-    setBooks(data);
+  const handleSaveBook = () => {
+    setBooks(storage.getBooks());
     setShowForm(false);
     setEditingBook(null);
     setView("library");
@@ -63,7 +62,7 @@ export default function Page() {
 
   const handleDeleteBook = async (id: string) => {
     if (confirm("Are you sure you want to delete this book?")) {
-      await storage.deleteBook(id);
+      await storage.deleteBook(id); // Added await here
       const data = await storage.getBooks();
       setBooks(data);
     }

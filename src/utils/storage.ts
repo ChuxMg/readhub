@@ -10,9 +10,13 @@ export interface Book {
 export const storage = {
   getBooks: async (): Promise<Book[]> => {
     try {
-      const res = await fetch("/api/books");
+      // Bypasses browser cache with a timestamp (?t=...)
+      const res = await fetch(`/api/books?t=${Date.now()}`, {
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to fetch");
-      return await res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     } catch (error) {
       console.error(error);
       return [];
@@ -20,17 +24,27 @@ export const storage = {
   },
 
   saveBook: async (bookData: Partial<Book>): Promise<void> => {
-    await fetch("/api/books", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bookData),
-    });
+    try {
+      const res = await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookData),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+    } catch (error) {
+      console.error(error);
+    }
   },
 
   deleteBook: async (id: string): Promise<void> => {
-    await fetch(`/api/books/${id}`, {
-      method: "DELETE",
-    });
+    try {
+      const res = await fetch(`/api/books/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+    } catch (error) {
+      console.error(error);
+    }
   },
 
   fileToBase64: (file: File): Promise<string> => {
