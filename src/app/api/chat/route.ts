@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { prisma } from "@/src/lib/prisma";
-import * as pdfjs from "pdfjs-dist/build/pdf.mjs";
 
-import "pdfjs-dist/build/pdf.worker.mjs";
-
-// Initialize OpenAI client (configured for Groq)
+// Initialize OpenAI client
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "dummy_key_for_build",
+  baseURL: process.env.AI_BASE_URL || "https://api.openai.com/v1",
 });
 
 export async function POST(request: Request) {
   try {
     const { message, bookId } = await request.json();
+
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === "dummy_key_for_build") {
+      return NextResponse.json(
+        { error: "API Key Missing", details: "Please set OPENAI_API_KEY in your .env file." },
+        { status: 401 }
+      );
+    }
+
     const book = await prisma.book.findUnique({ where: { id: bookId } });
 
     if (!book) {
