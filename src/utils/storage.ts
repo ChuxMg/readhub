@@ -33,8 +33,14 @@ export const storage = {
   },
 
   deleteBook: async (id: string): Promise<void> => {
-    // Note: Delete API route not implemented yet in this demo but would follow similar pattern
-    console.warn("Delete not implemented via API yet");
+    try {
+      const res = await fetch(`/api/books/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+    } catch (error) {
+      console.error(error);
+    }
   },
 
   fileToBase64: (file: File): Promise<string> => {

@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma";
-import * as pdfjs from "pdfjs-dist";
+import * as pdfjs from "pdfjs-dist/build/pdf.mjs";
 
-// Fix for pdfjs worker
-if (typeof window === "undefined") {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
-}
+// Import worker correctly for Node.js environment
+import "pdfjs-dist/build/pdf.worker.mjs";
 
 export async function GET() {
   try {
@@ -21,7 +19,14 @@ export async function GET() {
 async function extractTextFromPDF(pdfBase64: string): Promise<string> {
   try {
     const dataBuffer = Buffer.from(pdfBase64.split(",")[1], "base64");
-    const loadingTask = pdfjs.getDocument({ data: new Uint8Array(dataBuffer) });
+
+    const loadingTask = pdfjs.getDocument({
+      data: new Uint8Array(dataBuffer),
+      useWorkerFetch: false,
+      isEvalSupported: false,
+      useSystemFonts: true,
+    });
+
     const pdf = await loadingTask.promise;
     let fullText = "";
 
@@ -34,30 +39,41 @@ async function extractTextFromPDF(pdfBase64: string): Promise<string> {
       fullText += pageText + "\n";
     }
 
-    return fullText;
+    return fullText.trim();
   } catch (error) {
-    console.error("Text extraction failed:", error);
+    console.error("[Backend] PDF Extraction failed:", error);
     return "";
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const { title, author, pdfBase64 } = await request.json();
+    const { id, title, author, pdfBase64 } = await request.json();
 
-    const extractedText = await extractTextFromPDF(pdfBase64);
+    let extractedText = undefined;
+    if (pdfBase64) {
+      extractedText = await extractTextFromPDF(pdfBase64);
+    }
 
-    const book = await prisma.book.create({
-      data: {
+    // UPSERT logic: If ID exists, update. Otherwise, create.
+    const book = await prisma.book.upsert({
+      where: { id: id || "new-id" },
+      update: {
+        title,
+        author,
+        ...(pdfBase64 ? { pdfBase64, extractedText } : {}),
+      },
+      create: {
         title,
         author,
         pdfBase64,
-        extractedText,
+        extractedText: extractedText || "",
       },
     });
 
     return NextResponse.json(book);
   } catch (error) {
+    console.error("Save error:", error);
     return NextResponse.json({ error: "Failed to save book" }, { status: 500 });
   }
 }

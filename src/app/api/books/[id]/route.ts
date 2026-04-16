@@ -1,0 +1,18 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/src/lib/prisma";
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    await prisma.book.delete({
+      where: { id },
+    });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete error:", error);
+    return NextResponse.json({ error: "Failed to delete book" }, { status: 500 });
+  }
+}
