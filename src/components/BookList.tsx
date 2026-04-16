@@ -11,14 +11,27 @@ interface BookListProps {
   onDelete: (id: string) => void;
 }
 
-export function BookList({ books, isAdmin, onRead, onEdit, onDelete }: BookListProps) {
-  if (books.length === 0) {
+export function BookList({
+  books,
+  isAdmin,
+  onRead,
+  onEdit,
+  onDelete,
+}: BookListProps) {
+  // SAFETY FIX: Ensure books is always treated as an array to prevent crashes
+  const booksArray = Array.isArray(books) ? books : [];
+
+  if (booksArray.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
         <FileText className="h-16 w-16 text-slate-300" />
-        <h3 className="mt-4 text-lg font-medium text-slate-700">No books yet</h3>
+        <h3 className="mt-4 text-lg font-medium text-slate-700">
+          No books yet
+        </h3>
         <p className="mt-1 text-slate-500">
-          {isAdmin ? "Upload your first book to get started" : "Check back later for new content"}
+          {isAdmin
+            ? "Upload your first book to get started"
+            : "Check back later for new content"}
         </p>
       </div>
     );
@@ -26,7 +39,7 @@ export function BookList({ books, isAdmin, onRead, onEdit, onDelete }: BookListP
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {books.map((book) => (
+      {booksArray.map((book) => (
         <Card key={book.id} className="transition-shadow hover:shadow-md">
           <CardContent className="p-5">
             <div className="mb-4 flex h-32 items-center justify-center rounded-lg bg-slate-100">
@@ -49,7 +62,11 @@ export function BookList({ books, isAdmin, onRead, onEdit, onDelete }: BookListP
               </Button>
               {isAdmin && (
                 <>
-                  <Button variant="outline" size="icon" onClick={() => onEdit(book)}>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => onEdit(book)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button

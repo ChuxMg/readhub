@@ -4,33 +4,47 @@ export interface Book {
   author: string;
   pdfBase64: string;
   uploadedAt: string;
+  extractedText?: string;
 }
 
-const BOOKS_KEY = "readhub_books";
-
 export const storage = {
-  getBooks: (): Book[] => {
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem(BOOKS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  },
-
-  saveBook: (book: Book): void => {
-    if (typeof window === "undefined") return;
-    const books = storage.getBooks();
-    const existingIndex = books.findIndex((b) => b.id === book.id);
-    if (existingIndex >= 0) {
-      books[existingIndex] = book;
-    } else {
-      books.push(book);
+  getBooks: async (): Promise<Book[]> => {
+    try {
+      // Bypasses browser cache with a timestamp (?t=...)
+      const res = await fetch(`/api/books?t=${Date.now()}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    } catch (error) {
+      console.error(error);
+      return [];
     }
-    localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
   },
 
-  deleteBook: (id: string): void => {
-    if (typeof window === "undefined") return;
-    const books = storage.getBooks().filter((b) => b.id !== id);
-    localStorage.setItem(BOOKS_KEY, JSON.stringify(books));
+  saveBook: async (bookData: Partial<Book>): Promise<void> => {
+    try {
+      const res = await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bookData),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+    } catch (error) {
+      console.error(error);
+    }
+  },
+
+  deleteBook: async (id: string): Promise<void> => {
+    try {
+      const res = await fetch(`/api/books/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+    } catch (error) {
+      console.error(error);
+    }
   },
 
   fileToBase64: (file: File): Promise<string> => {
@@ -40,5 +54,21 @@ export const storage = {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  },
+
+  chatWithBook: async (bookId: string, message: string): Promise<string> => {
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookId, message }),
+      });
+      if (!res.ok) throw new Error("Failed to chat");
+      const data = await res.json();
+      return data.reply;
+    } catch (error) {
+      console.error(error);
+      return "Sorry, I couldn't connect to the AI.";
+    }
   },
 };
