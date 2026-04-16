@@ -7,6 +7,11 @@ export interface Book {
   extractedText?: string;
 }
 
+export interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export const storage = {
   getBooks: async (): Promise<Book[]> => {
     try {
