@@ -22,13 +22,9 @@ export default function Page() {
   const [books, setBooks] = useState<Book[]>([]);
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      if (user) {
-        const data = await storage.getBooks();
-        setBooks(data);
-      }
-    };
-    fetchBooks();
+    if (user) {
+      setBooks(storage.getBooks());
+    }
   }, [user]);
 
   const handleLogin = (email: string, password: string) => {
@@ -47,9 +43,8 @@ export default function Page() {
     setShowForm(false);
   };
 
-  const handleSaveBook = async () => {
-    const data = await storage.getBooks();
-    setBooks(data);
+  const handleSaveBook = () => {
+    setBooks(storage.getBooks());
     setShowForm(false);
     setEditingBook(null);
     setView("library");
@@ -61,11 +56,10 @@ export default function Page() {
     setView("edit-book");
   };
 
-  const handleDeleteBook = async (id: string) => {
+  const handleDeleteBook = (id: string) => {
     if (confirm("Are you sure you want to delete this book?")) {
-      await storage.deleteBook(id);
-      const data = await storage.getBooks();
-      setBooks(data);
+      storage.deleteBook(id);
+      setBooks(storage.getBooks());
     }
   };
 

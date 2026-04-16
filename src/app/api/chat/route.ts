@@ -3,7 +3,6 @@ import OpenAI from "openai";
 import { prisma } from "@/src/lib/prisma";
 import * as pdfjs from "pdfjs-dist/build/pdf.mjs";
 
-// Import worker correctly for Node.js environment
 import "pdfjs-dist/build/pdf.worker.mjs";
 
 const openai = new OpenAI({

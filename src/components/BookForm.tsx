@@ -33,14 +33,15 @@ export function BookForm({ editingBook, onSave, onCancel }: BookFormProps) {
         return;
       }
 
-      const bookData: Partial<Book> = {
-        id: editingBook?.id,
+      const book: Book = {
+        id: editingBook?.id || crypto.randomUUID(),
         title: title.trim(),
         author: author.trim(),
-        pdfBase64: pdfFile ? pdfBase64 : undefined,
+        pdfBase64,
+        uploadedAt: editingBook?.uploadedAt || new Date().toISOString(),
       };
 
-      await storage.saveBook(bookData);
+      storage.saveBook(book);
       onSave();
     } catch (error) {
       console.error("Error saving book:", error);

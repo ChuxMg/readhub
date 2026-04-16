@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/src/lib/prisma";
 import * as pdfjs from "pdfjs-dist/build/pdf.mjs";
 
-// Import worker correctly for Node.js environment
+// Ensure PDF engine works in Node.js
 import "pdfjs-dist/build/pdf.worker.mjs";
 
 export async function GET() {
@@ -12,6 +12,7 @@ export async function GET() {
     });
     return NextResponse.json(books);
   } catch (error) {
+    console.error("Fetch error:", error);
     return NextResponse.json({ error: "Failed to fetch books" }, { status: 500 });
   }
 }
@@ -19,29 +20,22 @@ export async function GET() {
 async function extractTextFromPDF(pdfBase64: string): Promise<string> {
   try {
     const dataBuffer = Buffer.from(pdfBase64.split(",")[1], "base64");
-
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(dataBuffer),
       useWorkerFetch: false,
       isEvalSupported: false,
       useSystemFonts: true,
     });
-
     const pdf = await loadingTask.promise;
     let fullText = "";
-
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => item.str)
-        .join(" ");
-      fullText += pageText + "\n";
+      fullText += textContent.items.map((item: any) => item.str).join(" ") + "\n";
     }
-
     return fullText.trim();
   } catch (error) {
-    console.error("[Backend] PDF Extraction failed:", error);
+    console.error("Extraction failed:", error);
     return "";
   }
 }
@@ -49,27 +43,34 @@ async function extractTextFromPDF(pdfBase64: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const { id, title, author, pdfBase64 } = await request.json();
-
     let extractedText = undefined;
+
     if (pdfBase64) {
       extractedText = await extractTextFromPDF(pdfBase64);
     }
 
-    // UPSERT logic: If ID exists, update. Otherwise, create.
-    const book = await prisma.book.upsert({
-      where: { id: id || "new-id" },
-      update: {
-        title,
-        author,
-        ...(pdfBase64 ? { pdfBase64, extractedText } : {}),
-      },
-      create: {
-        title,
-        author,
-        pdfBase64,
-        extractedText: extractedText || "",
-      },
-    });
+    let book;
+    if (id) {
+      // UPDATE existing book
+      book = await prisma.book.update({
+        where: { id },
+        data: {
+          title,
+          author,
+          ...(pdfBase64 ? { pdfBase64, extractedText } : {}),
+        },
+      });
+    } else {
+      // CREATE new book
+      book = await prisma.book.create({
+        data: {
+          title,
+          author,
+          pdfBase64: pdfBase64 || "",
+          extractedText: extractedText || "",
+        },
+      });
+    }
 
     return NextResponse.json(book);
   } catch (error) {

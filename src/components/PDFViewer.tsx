@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Book } from "../utils/storage";
-import { ArrowLeft, ZoomIn, ZoomOut, MessageSquare, X } from "lucide-react";
-import { ChatInterface } from "./ChatInterface";
+import { ArrowLeft, ZoomIn, ZoomOut } from "lucide-react";
 
 interface PDFViewerProps {
   book: Book;
@@ -11,7 +10,6 @@ interface PDFViewerProps {
 
 export function PDFViewer({ book, onBack }: PDFViewerProps) {
   const [zoom, setZoom] = useState(100);
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 25, 50));
@@ -33,7 +31,7 @@ export function PDFViewer({ book, onBack }: PDFViewerProps) {
             <p className="text-xs text-slate-400">{book.author}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-2">
             <Button
               variant="ghost"
@@ -57,43 +55,23 @@ export function PDFViewer({ book, onBack }: PDFViewerProps) {
               <ZoomIn className="h-4 w-4" />
             </Button>
           </div>
-
-          <Button
-            onClick={() => setIsChatOpen(!isChatOpen)}
-            className={`gap-2 ${isChatOpen ? "bg-slate-600" : "bg-blue-600 hover:bg-blue-700"}`}
-          >
-            {isChatOpen ? <X size={18} /> : <MessageSquare size={18} />}
-            {isChatOpen ? "Close Chat" : "Chat with AI"}
-          </Button>
         </div>
       </div>
-
-      <div className="flex flex-1 overflow-hidden">
-        <div className="relative flex-1 overflow-auto bg-slate-900 p-4">
-          <div
-            className="mx-auto transition-transform duration-200"
-            style={{
-              transform: `scale(${zoom / 100})`,
-              transformOrigin: "top center"
-            }}
+      <div className="flex-1 overflow-auto p-4">
+        <div
+          className="mx-auto transition-transform duration-200"
+          style={{ transform: `scale(${zoom / 100})` }}
+        >
+          <object
+            data={book.pdfBase64}
+            type="application/pdf"
+            className="h-[calc(100vh-180px)] w-full rounded-lg shadow-2xl"
           >
-            <object
-              data={book.pdfBase64}
-              type="application/pdf"
-              className="h-[calc(100vh-120px)] w-full rounded-lg shadow-2xl"
-            >
-              <div className="flex h-96 items-center justify-center text-slate-400">
-                <p>Unable to display PDF. Please try a different browser.</p>
-              </div>
-            </object>
-          </div>
+            <div className="flex h-96 items-center justify-center text-slate-400">
+              <p>Unable to display PDF. Please try a different browser.</p>
+            </div>
+          </object>
         </div>
-
-        {isChatOpen && (
-          <div className="w-96 border-l border-slate-700">
-            <ChatInterface bookId={book.id} />
-          </div>
-        )}
       </div>
     </div>
   );
