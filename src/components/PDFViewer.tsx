@@ -20,31 +20,49 @@ export function PDFViewer({ book, onBack }: PDFViewerProps) {
 
   return (
     <div className="fixed inset-0 bg-slate-900 flex flex-col z-30">
-      {/* Toolbar */}
       <div className="flex items-center justify-between border-b border-gray-700 bg-slate-800 px-4 py-3">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={onBack} className="text-white hover:bg-slate-700">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="text-white hover:bg-slate-700"
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="hidden sm:block">
-            <h2 className="text-white font-medium truncate max-w-md">{book.title}</h2>
+            <h2 className="text-white font-medium truncate max-w-md">
+              {book.title}
+            </h2>
             <p className="text-slate-400 text-sm">{book.author}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-slate-700 rounded-lg p-1 mr-2">
-            <Button variant="ghost" size="icon" onClick={handleZoomOut} className="text-white hover:bg-slate-600 h-8 w-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleZoomOut}
+              className="text-white hover:bg-slate-600 h-8 w-8"
+            >
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <span className="text-white text-sm w-12 text-center font-mono">{zoom}%</span>
-            <Button variant="ghost" size="icon" onClick={handleZoomIn} className="text-white hover:bg-slate-600 h-8 w-8">
+            <span className="text-white text-sm w-12 text-center font-mono">
+              {zoom}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleZoomIn}
+              className="text-white hover:bg-slate-600 h-8 w-8"
+            >
               <ZoomIn className="h-4 w-4" />
             </Button>
           </div>
-          
-          <Button 
-            onClick={() => setIsChatOpen(true)} 
+
+          <Button
+            onClick={() => setIsChatOpen(true)}
             className="bg-indigo-600 hover:bg-indigo-700 gap-2"
           >
             <MessageSquare className="h-4 w-4" />
@@ -53,9 +71,8 @@ export function PDFViewer({ book, onBack }: PDFViewerProps) {
         </div>
       </div>
 
-      {/* PDF Content Area */}
       <div className="flex-1 overflow-auto bg-slate-950 flex justify-center p-8">
-        <div 
+        <div
           className="transition-transform duration-200 ease-out origin-top shadow-2xl"
           style={{ transform: `scale(${zoom / 100})` }}
         >
@@ -77,10 +94,10 @@ export function PDFViewer({ book, onBack }: PDFViewerProps) {
         </div>
       </div>
 
-      {/* Chat Sidebar */}
       <ChatSidebar
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
+        bookId={book.id}
         bookTitle={book.title}
         bookAuthor={book.author}
       />

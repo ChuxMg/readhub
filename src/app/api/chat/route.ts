@@ -7,7 +7,8 @@ import "pdfjs-dist/build/pdf.worker.mjs";
 
 // Initialize OpenAI client (configured for Groq)
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || "dummy_key_for_build",
+  apiKey: process.env.GROQ_API_KEY || "dummy_key_for_build",
+  baseURL: "https://api.groq.com/openai/v1",
 });
 
 export async function POST(request: Request) {

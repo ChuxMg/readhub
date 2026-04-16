@@ -7,10 +7,14 @@ export interface Book {
   extractedText?: string;
 }
 
+export interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export const storage = {
   getBooks: async (): Promise<Book[]> => {
     try {
-      // Bypasses browser cache with a timestamp (?t=...)
       const res = await fetch(`/api/books?t=${Date.now()}`, {
         cache: "no-store",
       });
